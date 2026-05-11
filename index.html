@@ -33,7 +33,7 @@ body{font-family:'IBM Plex Sans','Calibri',sans-serif;background:var(--bg);color
 .ls-brand-logo span{color:var(--amber);}
 .ls-brand-company{font-size:11px;font-weight:600;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;}
 .ls-brand-loc{font-size:10px;color:#78716c;margin-top:2px;}
-.ls-icons{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;}
+.ls-icons{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;max-width:600px;}
 .ls-icon-btn{display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 16px 20px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
 .ls-icon-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;}
 .ls-icon-btn:hover{border-color:rgba(217,119,6,.6);background:rgba(217,119,6,.1);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.3);}
@@ -48,6 +48,10 @@ body{font-family:'IBM Plex Sans','Calibri',sans-serif;background:var(--bg);color
 .ls-pw-row{display:flex;gap:10px;align-items:center;}
 .ls-pw-input{flex:1;padding:11px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;font-family:inherit;font-size:14px;color:#fff;background:rgba(255,255,255,.08);outline:none;transition:border-color .15s,box-shadow .15s;}
 .ls-pw-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(217,119,6,.2);}
+/* Hide number input spinners/scroll globally */
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 .ls-pw-input::placeholder{color:#57534e;}
 /* User select dropdown specific styles */
 select.ls-pw-input{
@@ -79,6 +83,7 @@ select.ls-pw-input:disabled{
 .ls-pw-btn:hover{background:#b45309;}
 .ls-pw-btn:disabled{background:#57534e;cursor:not-allowed;}
 .ls-error{background:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:500;margin-top:12px;display:none;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 .field-label{font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase;margin-bottom:6px;display:block;}
 .field-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s;outline:none;}
 .field-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(217,119,6,.12);}
@@ -172,10 +177,104 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 @keyframes cardPulse{0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,0);}50%{box-shadow:0 0 10px 3px rgba(217,119,6,.2);}}
 @keyframes rowBlink{0%,100%{background:rgba(220,38,38,.04);}50%{background:rgba(220,38,38,.14);}}
 @keyframes rowPulse{0%,100%{background:rgba(217,119,6,.04);}50%{background:rgba(217,119,6,.11);}}
-/* Lot card buffer shimmer during inventory update */
-@keyframes lotShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.lots-updating .lot-card{position:relative;overflow:hidden;pointer-events:none;}
-.lots-updating .lot-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.55) 40%,rgba(255,255,255,0.55) 60%,transparent 100%);background-size:200% 100%;animation:lotShimmer 1.1s linear infinite;z-index:10;border-radius:var(--r-md);}
+/* ── UNIFIED DIAGONAL SHIMMER SYSTEM ────────────────────────── */
+@keyframes diagShimmer{
+  0%  { background-position: -200% -200%; }
+  100%{ background-position:  200%  200%; }
+}
+/* Shared shimmer gradient — travels diagonally top-left → bottom-right */
+.shimmer-cell,
+.shimmer-block,
+.shimmer-kpi {
+  background: linear-gradient(
+    135deg,
+    #efefef 25%,
+    #fafafa 45%,
+    #e8e8e8 50%,
+    #fafafa 55%,
+    #efefef 75%
+  );
+  background-size: 400% 400%;
+  animation: diagShimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Table shimmer rows */
+.shimmer-row td { padding: 10px 12px; }
+.shimmer-cell   { height: 14px; display: block; }
+.shimmer-cell.wide   { width: 90%; }
+.shimmer-cell.med    { width: 60%; }
+.shimmer-cell.narrow { width: 40%; }
+.shimmer-cell.tiny   { width: 25%; }
+
+/* Lot card shimmer — overrides card content with a light wash + diagonal sweep */
+@keyframes lotShimmer{
+  0%  { background-position: -200% -200%; }
+  100%{ background-position:  200%  200%; }
+}
+.lots-updating .lot-card {
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  background: #f5f5f3 !important;
+  border-color: #e8e4de !important;
+}
+.lots-updating .lot-card * { opacity: 0.25; }
+.lots-updating .lot-card::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(255,255,255,0.75) 48%,
+    rgba(255,255,255,0.9)  50%,
+    rgba(255,255,255,0.75) 52%,
+    transparent 70%
+  );
+  background-size: 300% 300%;
+  animation: lotShimmer 1.4s ease-in-out infinite;
+  z-index: 10;
+  border-radius: var(--r-md);
+}
+
+/* Skeleton lot cards shown while inventory loads */
+.shimmer-lot-card {
+  border: 2px solid #ede9e3;
+  border-radius: var(--r-md);
+  padding: 16px;
+  background: #f5f5f3;
+  overflow: hidden;
+  position: relative;
+  min-height: 140px;
+}
+.shimmer-lot-card::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(255,255,255,0.75) 48%,
+    rgba(255,255,255,0.9)  50%,
+    rgba(255,255,255,0.75) 52%,
+    transparent 70%
+  );
+  background-size: 300% 300%;
+  animation: lotShimmer 1.4s ease-in-out infinite;
+  z-index: 2;
+}
+.shimmer-lot-card .slc-line {
+  height: 10px; border-radius: 5px; background: #e8e4de; margin-bottom: 10px;
+}
+.shimmer-lot-card .slc-line.lg { width: 55%; height: 22px; }
+.shimmer-lot-card .slc-line.md { width: 70%; }
+.shimmer-lot-card .slc-line.sm { width: 45%; }
+.shimmer-lot-card .slc-line.xs { width: 35%; }
+
+/* KPI shimmer placeholders */
+.shimmer-kpi { height: 28px; width: 70%; margin: 0 auto; }
+.shimmer-block { height: 14px; border-radius: 6px; background: #efefef; }
 .lot-moved-today{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:10px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:5px;padding:3px 7px;letter-spacing:0.02em;}
 .alert-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:0.05em;}
 .alert-pill-red{background:var(--red-lt);color:var(--red);}
@@ -236,7 +335,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
     </div>
 
     <!-- 4 section icons -->
-    <div class="ls-icons">
+    <div class="ls-icons" id="ls-icons-grid">
       <div class="ls-icon-btn" id="ls-btn-input" onclick="selectSection('input')">
         <div class="ls-icon-emoji">📥</div>
         <div class="ls-icon-label">Input</div>
@@ -252,10 +351,16 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
         <div class="ls-icon-label">Reports</div>
         <div class="ls-icon-sub">View and download records</div>
       </div>
-      <div class="ls-icon-btn" id="ls-btn-master" onclick="selectSection('master')">
+      <!-- Master card: shown for Admin, locked placeholder for others -->
+      <div class="ls-icon-btn" id="ls-btn-master" onclick="selectSection('master')" style="display:none">
         <div class="ls-icon-emoji">🗂️</div>
         <div class="ls-icon-label">Master</div>
-        <div class="ls-icon-sub">Master data for Admins</div>
+        <div class="ls-icon-sub">Admin only</div>
+      </div>
+      <div id="ls-master-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px 16px;background:rgba(255,255,255,.03);border:1.5px dashed rgba(255,255,255,.1);border-radius:14px;cursor:not-allowed;opacity:0.4">
+        <div style="font-size:36px">🔒</div>
+        <div style="font-size:13px;font-weight:700;color:#a8a29e">Master</div>
+        <div style="font-size:11px;color:#78716c;text-align:center">Admin access only</div>
       </div>
     </div>
 
@@ -273,6 +378,27 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
       <div id="ls-user-buttons" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
         <div style="color:#78716c;font-size:13px">⟳ Loading users…</div>
       </div>
+    </div>
+
+    <!-- Password box — shown when needed -->
+    <div id="ls-pw-box" class="ls-pw-box" style="display:none;width:100%;max-width:380px">
+      <div class="ls-pw-title" id="ls-pw-title">🔐 Enter Password</div>
+      <div class="ls-pw-hint" id="ls-pw-hint">Required for this section</div>
+      <div class="ls-pw-row">
+        <input class="ls-pw-input" type="password" id="ls-pw-input"
+          placeholder="Password…"
+          onkeydown="if(event.key==='Enter')doEnterApp()"
+          autocomplete="current-password">
+        <button class="ls-pw-btn" onclick="doEnterApp()" id="ls-enter-btn">Enter →</button>
+      </div>
+      <div class="ls-error" id="ls-pw-error">Incorrect password — try again</div>
+    </div>
+
+    <!-- Enter button when no password needed -->
+    <div id="ls-enter-wrap" style="display:none;width:100%;max-width:380px;text-align:center">
+      <button class="ls-pw-btn" style="width:100%;padding:13px;font-size:15px" onclick="doEnterApp()">
+        Enter App →
+      </button>
     </div>
   </div>
 </div>
@@ -852,7 +978,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 <div id="toastContainer"></div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBjJM_B3IagN7u29B09rq7mdUz6HZaWnlpPz8RyP6gDW3S-lKw5b5SsvHnrsRxcAPx/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjq4RQDlsxgBp-e9r7xTvi6sjbQjZ-UTr6L6N9Z4WnaadP1i4gEsa8YU3E7ZHiQ4cD/exec';
 
 let masterRows=[],stockRows=[],inventoryRows=[],filteredInv=[],selectedLot=null,pendingRows=[],summaryCache=null;
 let thresholdMap={},stockByCodeMap={},thresholdsReady=false;
@@ -1091,8 +1217,11 @@ function showToast(msg,type='info'){
   setTimeout(()=>t.remove(),3500);
 }
 
-// ── LOGIN (no password) ───────────────────────────────────────
+// ── LOGIN ─────────────────────────────────────────────────────
 let selectedSection = 'input';
+let loginConfig = { enablePasswordForUsers: false }; // fetched on load
+let _usersCache = null; // cached getMasterUsers result — avoids duplicate network calls
+let _preloadDone = false; // tracks whether background preload has run
 
 const SECTION_META = {
   input:   { icon:'📥', label:'Stock Input',   color:'#059669' },
@@ -1104,8 +1233,55 @@ const SECTION_META = {
 function selectSection(name){
   selectedSection = name;
   ['input','output','reports','master'].forEach(s=>{
-    document.getElementById('ls-btn-'+s).classList.toggle('active-btn', s===name);
+    const el = document.getElementById('ls-btn-'+s);
+    if(el) el.classList.toggle('active-btn', s===name);
   });
+  updateLoginUI();
+}
+
+// Show/hide password box and enter button based on selected user + section
+function updateLoginUI(){
+  const user    = (window._loginSelectedUser || '').trim();
+  const isAdmin = user.toLowerCase() === 'admin';
+  const sec     = selectedSection;
+
+  const pwBox    = document.getElementById('ls-pw-box');
+  const enterWrap= document.getElementById('ls-enter-wrap');
+  const pwTitle  = document.getElementById('ls-pw-title');
+  const pwHint   = document.getElementById('ls-pw-hint');
+  const pwErr    = document.getElementById('ls-pw-error');
+  if(pwErr) pwErr.style.display = 'none';
+  if(document.getElementById('ls-pw-input')) document.getElementById('ls-pw-input').value = '';
+
+  if(!user){
+    if(pwBox)    pwBox.style.display    = 'none';
+    if(enterWrap)enterWrap.style.display= 'none';
+    return;
+  }
+
+  // Decide whether a password is needed
+  const needsPw = isAdmin || (sec !== 'master' && loginConfig.enablePasswordForUsers);
+
+  if(needsPw){
+    if(pwBox){
+      pwBox.style.display = '';
+      if(isAdmin && sec === 'master'){
+        if(pwTitle) pwTitle.textContent = '🔐 Admin Password';
+        if(pwHint)  pwHint.textContent  = 'Master section requires Admin password';
+      } else if(isAdmin){
+        if(pwTitle) pwTitle.textContent = '🔐 Admin Password';
+        if(pwHint)  pwHint.textContent  = 'Enter your password to continue';
+      } else {
+        if(pwTitle) pwTitle.textContent = '🔐 Enter Your Password';
+        if(pwHint)  pwHint.textContent  = 'Password required — enter yours to continue';
+      }
+      setTimeout(()=>{ const inp=document.getElementById('ls-pw-input'); if(inp)inp.focus(); },80);
+    }
+    if(enterWrap) enterWrap.style.display = 'none';
+  } else {
+    if(pwBox)    pwBox.style.display    = 'none';
+    if(enterWrap)enterWrap.style.display= '';
+  }
 }
 
 async function loadUsers(){
@@ -1114,15 +1290,18 @@ async function loadUsers(){
   try{
     const result = await api('getMasterUsers');
     const users = result.users || [];
+    loginConfig.enablePasswordForUsers = result.enablePasswordForUsers || false;
+
     if(users.length === 0){
       container.innerHTML = '<div style="color:#78716c;font-size:13px">⚠️ No users found in MasterData</div>';
       return;
     }
     container.innerHTML = users.map(u=>`
-      <button onclick="enterApp('${u.replace(/'/g,"\\'")}')
-" style="padding:12px 20px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;color:#e7e5e4;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:0.02em"
+      <button onclick="pickUser('${u.replace(/'/g,"\\'")}')"
+        id="ls-ubtn-${u.replace(/[^a-zA-Z0-9]/g,'_')}"
+        style="padding:12px 20px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;color:#e7e5e4;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:0.02em"
         onmouseover="this.style.background='rgba(217,119,6,.18)';this.style.borderColor='rgba(217,119,6,.7)'"
-        onmouseout="this.style.background='rgba(255,255,255,.08)';this.style.borderColor='rgba(255,255,255,.15)'">
+        onmouseout="if(window._loginSelectedUser!=='${u.replace(/'/g,"\\'")}'){this.style.background='rgba(255,255,255,.08)';this.style.borderColor='rgba(255,255,255,.15)'}">
         👤 ${u}
       </button>`).join('');
   }catch(e){
@@ -1131,19 +1310,170 @@ async function loadUsers(){
   }
 }
 
-async function enterApp(user){
-  currentUser = user;
-  // Enter app immediately — show UI right away
+function pickUser(user){
+  window._loginSelectedUser = user;
+  const isAdmin = user.toLowerCase() === 'admin';
+
+  // Highlight selected user button
+  document.querySelectorAll('#ls-user-buttons button').forEach(btn=>{
+    btn.style.background     = 'rgba(255,255,255,.08)';
+    btn.style.borderColor    = 'rgba(255,255,255,.15)';
+  });
+  const id = 'ls-ubtn-' + user.replace(/[^a-zA-Z0-9]/g,'_');
+  const el = document.getElementById(id);
+  if(el){ el.style.background='rgba(217,119,6,.18)'; el.style.borderColor='rgba(217,119,6,.7)'; }
+
+  // Show/hide Master section button (Admin only) vs locked placeholder
+  const masterBtn  = document.getElementById('ls-btn-master');
+  const masterPH   = document.getElementById('ls-master-placeholder');
+  if(masterBtn)  masterBtn.style.display  = isAdmin ? '' : 'none';
+  if(masterPH)   masterPH.style.display   = isAdmin ? 'none' : '';
+
+  // If current section is master and user is not Admin, reset to input
+  if(selectedSection === 'master' && !isAdmin){
+    selectedSection = 'input';
+    ['input','output','reports','master'].forEach(s=>{
+      const b=document.getElementById('ls-btn-'+s); if(b)b.classList.remove('active-btn');
+    });
+    document.getElementById('ls-btn-input')?.classList.add('active-btn');
+  }
+
+  updateLoginUI();
+}
+
+// Track if a login is in progress to prevent double-clicks
+let _loginInProgress = false;
+
+async function doEnterApp(){
+  if(_loginInProgress) return; // prevent double-submit
+  const user = (window._loginSelectedUser || '').trim();
+  if(!user){ showLoginError('⚠️ Please select a user first.'); return; }
+
+  const pwInput  = document.getElementById('ls-pw-input');
+  const pw       = pwInput ? pwInput.value : '';
+
+  // Both buttons that can trigger this
+  const enterBtn  = document.getElementById('ls-enter-btn');
+  const enterWrap = document.getElementById('ls-enter-wrap');
+  const allBtns   = [enterBtn, ...(enterWrap ? [...enterWrap.querySelectorAll('button')] : [])];
+
+  // Error display — always show in pw-box, but also as a toast if pw-box is hidden
+  const pwBox = document.getElementById('ls-pw-box');
+  const err   = document.getElementById('ls-pw-error');
+  const pwBoxVisible = pwBox && pwBox.style.display !== 'none';
+
+  // Hide any existing error
+  if(err) err.style.display = 'none';
+
+  // Disable buttons + show loading
+  // ── Fast path: no password required for this user/section ──
+  const isAdminUser = user.toLowerCase() === 'admin';
+  const needsApiLogin = isAdminUser || (selectedSection === 'master') || loginConfig.enablePasswordForUsers;
+
+  if(!needsApiLogin){
+    // Skip the round-trip entirely — jump straight in
+    _loginInProgress = false;
+    enterApp({ user, section: selectedSection, isAdmin: false });
+    return;
+  }
+
+  _loginInProgress = true;
+  allBtns.forEach(b=>{ if(b){ b.disabled=true; b.dataset._origText=b.textContent; b.textContent='…'; }});
+
+  function showError(msg){
+    _loginInProgress = false;
+    allBtns.forEach(b=>{ if(b){ b.disabled=false; b.textContent=b.dataset._origText||'Enter →'; }});
+    // Always show pw-box and error inline (reveal it if hidden)
+    if(pwBox) pwBox.style.display = '';
+    if(err){ err.textContent = msg; err.style.display = ''; }
+    // Also toast for visibility
+    showToast(msg, 'error');
+    // Shake the input for feedback
+    const inp = document.getElementById('ls-pw-input');
+    if(inp){ inp.style.animation='none'; inp.offsetHeight; inp.style.animation='shake .35s ease'; inp.select(); }
+  }
+
+  // ── Fast auth: verify password only, enter app immediately, load data in background ──
+  // For Admin use checkMasterPassword (tiny payload).
+  // For regular users with password enabled use loginSection but drop the heavy data.
+  try{
+    if(isAdminUser || selectedSection === 'master'){
+      // Admin: verify via lightweight endpoint first
+      const ok = await api('checkMasterPassword', { password: pw });
+      if(!ok.ok) throw new Error('WRONG_PASSWORD');
+    } else {
+      // Regular user with password enabled: use loginSection but we skip waiting for data
+      // by firing it and entering immediately — loginSection validates then returns data
+      // We only need to know if auth passed; data loads in enterApp background refresh.
+      const result = await api('loginSection', {
+        section:  selectedSection,
+        password: pw,
+        user:     user,
+        fastAuth: true   // hint to backend (harmless if ignored)
+      });
+      // Auth passed — enter instantly with whatever came back (may have data or not)
+      _loginInProgress = false;
+      allBtns.forEach(b=>{ if(b){ b.disabled=false; b.textContent=b.dataset._origText||'Enter →'; }});
+      enterApp(result);
+      return;
+    }
+
+    // Admin: auth passed — enter immediately, data loads in background
+    _loginInProgress = false;
+    allBtns.forEach(b=>{ if(b){ b.disabled=false; b.textContent=b.dataset._origText||'Enter →'; }});
+    enterApp({ user, section: selectedSection, isAdmin: isAdminUser });
+
+  }catch(e){
+    const raw = e.message || '';
+    const msg = raw === 'WRONG_PASSWORD'  ? '❌ Incorrect password — try again.'
+              : raw === 'ACCESS_DENIED'   ? '🚫 Only Admin can access the Master section.'
+              : raw === 'INVALID_USER'    ? '❌ Invalid user — not found in MasterData.'
+              : raw === 'USER_REQUIRED'   ? '⚠️ Please select a user.'
+              : '❌ ' + raw;
+    showError(msg);
+  }
+}
+
+function showLoginError(msg){
+  const err   = document.getElementById('ls-pw-error');
+  const pwBox = document.getElementById('ls-pw-box');
+  if(pwBox) pwBox.style.display = '';
+  if(err){ err.textContent=msg; err.style.display=''; }
+}
+
+async function enterApp(loginResult){
+  currentUser = loginResult.user || window._loginSelectedUser;
+  const isAdmin = loginResult.isAdmin || (currentUser.toLowerCase()==='admin');
+
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='block';
+
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('rpt-from').value=today;
   document.getElementById('rpt-to').value=today;
-  applyTabVisibility();
-  switchTab(selectedSection==='reports'?'reports':selectedSection);
-  showToast('Welcome '+user+'! Loading data…','info');
 
-  // Load inventory + master data in parallel (no password needed)
+  applyTabVisibility(isAdmin);
+
+  // Switch to the section that was logged into
+  const targetTab = loginResult.section || selectedSection;
+  switchTab(targetTab);
+  showToast('Welcome '+currentUser+'! Loading data…','info');
+
+  // Use data already returned by loginSection
+  if(loginResult.master){
+    const masterRowsList = loginResult.master || [];
+    stockRows     = loginResult.stock || [];
+    inventoryRows = stockRows.filter(r=>Number(r.PIECES_REMAINING)>0);
+    masterRows    = masterRowsList;
+    brandColorMap = {};
+    rebuildStockByCode(); populateInputDropdowns(); populateOutputDropdowns();
+    renderStockViewer(); updateOutputKpis();
+    setTimeout(loadThresholds, 300);
+    initRecentInputs(); initRecentOutputs(); loadEditPermissions();
+    showToast('Welcome '+currentUser+'!','success');
+  }
+
+  // Also refresh inventory + master column info + brand colors in background
   try{
     const [invData, masterData, colorData] = await Promise.all([
       api('getInventory'),
@@ -1151,11 +1481,9 @@ async function enterApp(user){
       api('getBrandColors')
     ]);
 
-    // Stock rows
     stockRows     = invData.rows||[];
     inventoryRows = stockRows.filter(r=>Number(r.PIECES_REMAINING)>0);
 
-    // Rebuild masterRows from column info so input dropdowns work
     const cols = masterData.columns||{};
     const slocVals  = (cols.SLOC?.values||[]).filter(v=>v.value).map(v=>v.value);
     const brandVals = (cols.BRAND?.values||[]).filter(v=>v.value);
@@ -1166,7 +1494,6 @@ async function enterApp(user){
     const sqmtrMap  = {};(cols.Sqmtr?.values||[]).forEach(v=>{sqmtrMap[v.row]=v.value;});
     const matCodeVals = (cols.MATERIAL_CODE?.values||[]).filter(v=>v.value);
 
-    // Build a flat masterRows array that populateInputDropdowns can use
     masterRows = [];
     brandVals.forEach(b=>{
       thickVals.forEach(t=>{
@@ -1194,50 +1521,172 @@ async function enterApp(user){
     brandColorMap = colorData.colors||{};
     rebuildStockByCode(); populateInputDropdowns(); populateOutputDropdowns();
     renderStockViewer(); updateOutputKpis();
-    showToast('Welcome '+user+'! Data loaded.','success');
     setTimeout(loadThresholds, 500);
-    initRecentInputs(); initRecentOutputs(); loadEditPermissions();
+
+    // ── Preload: fire today's inputs, outputs, and reports in background ──
+    // so all tabs are ready the moment the user switches to them
+    if(!_preloadDone){
+      _preloadDone = true;
+      const today = new Date().toISOString().split('T')[0];
+
+      // Inputs: set to today and load (shimmer shows while fetching)
+      initRecentInputs();
+
+      // Outputs: preload inventory + today's outputs quietly
+      // (don't show skeleton cards unless user is on that tab)
+      api('getInventory').then(d=>{
+        stockRows = d.rows||[];
+        inventoryRows = stockRows.filter(r=>Number(r.PIECES_REMAINING)>0);
+        rebuildStockByCode(); populateOutputDropdowns(); updateOutputKpis();
+        // Pre-populate roRowsCache for when user visits output tab
+        return api('getSummary',{from:today,to:today});
+      }).then(d=>{
+        roRowsCache = (d.outputs||[]).slice().reverse();
+      }).catch(()=>{});
+
+      // Reports: preload today silently into summaryCache
+      api('getSummary',{from:today,to:today}).then(sd=>{
+        return Promise.all([
+          Promise.resolve(sd),
+          api('getTransactions',{from:today,to:today}),
+          api('getMovements')
+        ]);
+      }).then(([sd,txd,mvd])=>{
+        summaryCache = sd;
+        summaryCache._transactions = txd.rows||[];
+        reportMovementsCache = mvd.rows||[];
+        // Only render if user is already on reports tab
+        if(document.getElementById('page-reports')?.classList.contains('active')){
+          renderReports(summaryCache);
+          renderMovementRows(reportMovementsCache);
+          if(summaryCache.stock) renderStockChart(summaryCache.stock);
+        }
+      }).catch(()=>{});
+    }
   }catch(e){
-    showToast('Data load failed — try refreshing stock manually.','error');
-    console.error('enterApp data load failed:', e);
-    initRecentInputs(); initRecentOutputs(); loadEditPermissions();
+    console.error('Background data refresh failed:', e);
   }
 }
 
-function applyTabVisibility(){
-  // Always show all tabs — no password gating
-  ['input','output','reports','master'].forEach(t=>{
+function applyTabVisibility(isAdmin){
+  // Show all tabs always; hide Master tab for non-Admin users
+  ['input','output','reports'].forEach(t=>{
     const tabEl = document.getElementById('tab-'+t);
     if(tabEl) tabEl.style.display = '';
   });
+  const masterTab = document.getElementById('tab-master');
+  if(masterTab) masterTab.style.display = isAdmin ? '' : 'none';
 }
 
 function doLogout(){
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('app').style.display='none';
   ['input','output','reports','master'].forEach(s=>{
-    document.getElementById('ls-btn-'+s).classList.remove('active-btn');
+    const btn=document.getElementById('ls-btn-'+s);
+    if(btn){ btn.classList.remove('active-btn'); }
     const tabEl=document.getElementById('tab-'+s);
-    if(tabEl)tabEl.style.display='';
+    if(tabEl) tabEl.style.display='';
   });
+  // Reset login UI
   selectedSection='input';
-  masterRows=[];stockRows=[];inventoryRows=[];pendingRows=[];selectedLot=null;currentUser='';
+  document.getElementById('ls-btn-input')?.classList.add('active-btn');
+  window._loginSelectedUser = '';
+  // Reset master btn + show placeholder
+  const masterLoginBtn=document.getElementById('ls-btn-master');
+  if(masterLoginBtn) masterLoginBtn.style.display='none';
+  const masterPH=document.getElementById('ls-master-placeholder');
+  if(masterPH) masterPH.style.display='';
+  const pwBox=document.getElementById('ls-pw-box');
+  const enterWrap=document.getElementById('ls-enter-wrap');
+  if(pwBox) pwBox.style.display='none';
+  if(enterWrap) enterWrap.style.display='none';
+  // Unhighlight user buttons
+  document.querySelectorAll('#ls-user-buttons button').forEach(btn=>{
+    btn.style.background='rgba(255,255,255,.08)';
+    btn.style.borderColor='rgba(255,255,255,.15)';
+  });
+  masterRows=[];stockRows=[];inventoryRows=[];pendingRows=[];selectedLot=null;currentUser='';_preloadDone=false;roRowsCache=[];summaryCache=null;
   masterUnlocked=false;
+  _loginInProgress=false;
 }
 
 // ── TAB SWITCHING ────────────────────────────────────────────
 function switchTab(name){
+  // Guard: only Admin can switch to master
+  const isAdmin = (currentUser||'').toLowerCase() === 'admin';
+  if(name === 'master' && !isAdmin){
+    showToast('Master section is only accessible to Admin.','error');
+    return;
+  }
   ['input','output','reports','master'].forEach(t=>{
     document.getElementById('page-'+t).classList.remove('active');
     document.getElementById('tab-'+t).classList.remove('active');
   });
   document.getElementById('page-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='output')  { loadInventory(); initRecentOutputs(); loadOutputEditLogs(); loadEditPermissions(); }
+  if(name==='output'){
+    // If preload already filled roRowsCache, render immediately; always refresh inventory
+    if(roRowsCache && roRowsCache.length > 0){ filterOutput(); renderRoRows(roRowsCache); fillRoFilterDropdowns(roRowsCache); }
+    loadInventory(); loadOutputEditLogs(); loadEditPermissions();
+    // Only init (fetch) if not preloaded yet
+    if(!roRowsCache || roRowsCache.length === 0) initRecentOutputs();
+  }
   if(name==='input')   { loadInputEditLogs(); loadEditPermissions(); }
-  if(name==='reports') setPreset('month');
-  if(name==='master')  loadMasterData();
+  if(name==='reports'){
+    // If preload already filled summaryCache, render immediately
+    if(summaryCache){
+      renderReports(summaryCache);
+      renderMovementRows(reportMovementsCache||[]);
+      if(summaryCache.stock) renderStockChart(summaryCache.stock);
+    } else {
+      setPreset('month');
+    }
+  }
+  if(name==='master')  loadMasterDataFull();
 }
+
+// Master: show loading skeleton, fetch ALL data, then render everything at once
+async function loadMasterDataFull(){
+  const container = document.getElementById('masterSections');
+  const btn = document.getElementById('masterRefreshBtn');
+  const kpiRow = document.getElementById('masterKpiRow');
+
+  // Show loading state — blank out sections, show spinner
+  if(container) container.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;color:var(--muted)">
+      <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+      <div style="font-size:13px;font-weight:600">Loading Master Data…</div>
+    </div>`;
+  if(kpiRow) kpiRow.innerHTML = '';
+  if(btn){ btn.disabled=true; document.getElementById('masterRefreshTxt').textContent='↻ Loading…'; }
+
+  try{
+    // Fetch everything in parallel — reuse users cache to avoid duplicate call
+    const [colData, permsData, configData] = await Promise.all([
+      api('getMasterColumnInfo'),
+      api('getEditPermissions'),
+      (_usersCache ? Promise.resolve(_usersCache) : api('getMasterUsers').then(r=>{ _usersCache=r; return r; }))
+    ]);
+
+    masterColData = colData;
+    editPermissions = permsData;
+
+    // Now render all at once — no flicker
+    if(container) container.innerHTML = ''; // clear spinner
+    renderMasterKpis(colData);
+    renderMasterSections(colData);
+    renderPermissionSwitchesSync(permsData);
+    renderPasswordManagementPanelSync(configData);
+
+  }catch(e){
+    showToast('Master data load failed: '+e.message,'error');
+    if(container) container.innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">❌ Failed to load master data: ${e.message}</div>`;
+  }
+  if(btn){ btn.disabled=false; document.getElementById('masterRefreshTxt').textContent='⟳ Refresh'; }
+}
+
+// Keep old loadMasterData as alias for refresh calls
+async function loadMasterData(){ return loadMasterDataFull(); }
 
 // ── THRESHOLDS ───────────────────────────────────────────────
 function rebuildStockByCode(){
@@ -1458,23 +1907,7 @@ async function addAndSaveNow(){
   const thick=document.getElementById('in-thick').value;const size=document.getElementById('in-size').value;
   const lot=document.getElementById('in-lot').value.trim();const pcs=Number(document.getElementById('in-pcs').value||0);
   if(!sloc||!brand||!thick||!size||!lot||pcs<=0){showToast('Fill all fields before saving','error');return;}
-  // ── Duplicate check ──────────────────────────────────────────
-  const codeRow=findMasterRow(brand,thick,size)||findMasterRow(brand,null,null);
-  let code=document.getElementById('in-matcode').value.trim();
-  if(codeRow){const init=String(codeRow.MATERIAL_CODE_INITIALS||'').trim();code=init+String(Number(thick)).padStart(2,'0')+size.padStart(5,'0');}
-  const dupInStock=stockRows.find(r=>
-    String(r.MATERIAL_CODE||'').trim()===String(code).trim()&&
-    String(r.LOT_NO||'').trim()===String(lot).trim()&&
-    Number(r.PIECES_REMAINING||0)>0
-  );
-  if(dupInStock){
-    const msg='⚠️ Duplicate Entry Warning\n\n'+
-      'Lot '+lot+' of '+brand+' ('+code+') already exists in CurrentStock with '+Number(dupInStock.PIECES_REMAINING)+' pcs remaining.\n\n'+
-      'Saving again will increase the stock quantity for this lot.\n\n'+
-      'Are you sure you want to save this entry?';
-    if(!confirm(msg))return;
-  }
-  // ─────────────────────────────────────────────────────────────
+  // addPendingRow() already contains the duplicate check — no need to repeat here
   addPendingRow();await submitPending();
 }
 
@@ -1494,6 +1927,15 @@ async function submitPending(){
 }
 
 // ── STOCK VIEWER ─────────────────────────────────────────────
+function showStockShimmer(){
+  const cols = [['wide'],['med'],['narrow'],['narrow'],['tiny'],['tiny'],['tiny'],['med'],['med'],['med'],['tiny']];
+  const rows = Array(6).fill(null).map(()=>
+    '<tr class="shimmer-row">'+cols.map(c=>'<td><div class="shimmer-cell '+c[0]+'"></div></td>').join('')+'</tr>'
+  ).join('');
+  const tbody = document.getElementById('svTbody');
+  if(tbody) tbody.innerHTML = rows;
+}
+
 async function loadStockViewer(){
   document.getElementById('svSpinnerWrap').style.display='inline-block';
   const hTxt=document.getElementById('headerRefreshTxt');const hSpin=document.getElementById('headerRefreshSpinner');
@@ -1502,6 +1944,7 @@ async function loadStockViewer(){
   if(hTxt)hTxt.style.display='none';if(hSpin)hSpin.style.display='inline-block';
   if(svTxt)svTxt.style.display='none';if(svSpin)svSpin.style.display='inline-block';
   if(hBtn)hBtn.disabled=true;if(svBtn)svBtn.disabled=true;
+  showStockShimmer(); // ← shimmer rows while fetching
   try{
     const data=await api('getInventory');
     stockRows=data.rows||[];inventoryRows=stockRows.filter(r=>Number(r.PIECES_REMAINING)>0);
@@ -1512,7 +1955,11 @@ async function loadStockViewer(){
     fillSelect('sv-brand',brands,'All Brands');fillSelect('sv-size',sizes,'All Sizes');fillSelect('sv-thick',thicks,'All Thickness');
     const svLot = document.getElementById('sv-lot'); if(svLot) svLot.value = '';
     renderStockViewer(); showToast('Stock refreshed — '+stockRows.length+' lots','info');
-  }catch(e){showToast('Refresh failed: '+e.message,'error');}
+  }catch(e){
+    const tbody=document.getElementById('svTbody');
+    if(tbody) tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--red)">❌ Refresh failed: '+e.message+'</td></tr>';
+    showToast('Refresh failed: '+e.message,'error');
+  }
   document.getElementById('svSpinnerWrap').style.display='none';
   if(hTxt)hTxt.style.display='inline';if(hSpin)hSpin.style.display='none';
   if(svTxt)svTxt.style.display='inline';if(svSpin)svSpin.style.display='none';
@@ -1573,6 +2020,21 @@ function populateOutputDropdowns(){
 async function loadInventory(){
   const btn=document.getElementById('refreshInvBtn');const txt=document.getElementById('refreshInvTxt');const spinner=document.getElementById('refreshInvSpinner');
   if(btn)btn.disabled=true;if(txt)txt.style.display='none';if(spinner)spinner.style.display='inline';
+
+  // Show skeleton lot cards while fetching
+  const grid=document.getElementById('lotsGrid');
+  const lotsSection=document.getElementById('lotsSection');
+  if(grid && lotsSection){
+    lotsSection.style.display='block';
+    const sk='<div class="shimmer-lot-card"><div class="slc-line xs" style="margin-bottom:6px"></div><div class="slc-line lg" style="margin-bottom:14px"></div><div class="slc-line md" style="margin-bottom:8px"></div><div class="slc-line sm" style="margin-bottom:8px"></div><div class="slc-line xs"></div></div>';
+    grid.innerHTML=Array(8).fill(sk).join('');
+  }
+  // Shimmer KPI placeholders
+  ['kpi-lots','kpi-pcs','kpi-sqm'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.dataset._origText=el.textContent;el.innerHTML='<div class="shimmer-kpi"></div>';}
+  });
+
   try{
     const [data] = await Promise.all([
       api('getInventory'),
@@ -1582,6 +2044,11 @@ async function loadInventory(){
     rebuildStockByCode();populateOutputDropdowns();updateOutputKpis();filterOutput();
     showToast('Inventory refreshed','info');
   }catch(e){showToast('Load failed: '+e.message,'error');}
+
+  ['kpi-lots','kpi-pcs','kpi-sqm'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && el.querySelector('.shimmer-kpi')){el.textContent=el.dataset._origText||'—';}
+  });
   if(btn)btn.disabled=false;if(txt)txt.style.display='inline';if(spinner)spinner.style.display='none';
 }
 
@@ -1897,6 +2364,20 @@ async function loadReports(){
   if(!from||!to){showToast('Select a date range','error');return;}
   const lb=document.getElementById('rptLoadBtn');const lt=document.getElementById('rptLoadTxt');const ls=document.getElementById('rptLoadSpinner');
   if(lb)lb.disabled=true;if(lt)lt.style.display='none';if(ls)ls.style.display='inline';
+
+  // Shimmer KPI cards while loading
+  const rptKpis=['rpt-pcs-in','rpt-sqm-in','rpt-pcs-out','rpt-sqm-out','rpt-net','rpt-stock'];
+  rptKpis.forEach(id=>{const el=document.getElementById(id);if(el){el.dataset._orig=el.textContent;el.innerHTML='<div class="shimmer-block" style="width:60%;height:18px;margin:2px auto"></div>';}});
+
+  // Shimmer report tables
+  function shimRows(colCount,n=5){
+    const ws=['wide','med','narrow','narrow','tiny','tiny','tiny','med','med','med','tiny','tiny'];
+    return Array(n).fill('<tr class="shimmer-row">'+Array(colCount).fill(0).map((_,i)=>'<td><div class="shimmer-cell '+ws[i%ws.length]+'"></div></td>').join('')+'</tr>').join('');
+  }
+  ['rpt-summary-tbody','rpt-inputs-tbody','rpt-outputs-tbody','rpt-history-tbody','rpt-movements-tbody'].forEach(id=>{
+    const el=document.getElementById(id);if(el){const cols=id.includes('movements')?5:id.includes('history')?9:id.includes('summary')?10:11;el.innerHTML=shimRows(cols);}
+  });
+
   try{
     const[summaryData,txData,moveData]=await Promise.all([
       api('getSummary',{from,to}),
@@ -1912,7 +2393,11 @@ async function loadReports(){
       renderStockChart(summaryCache.stock);
     }
     showToast('Reports loaded','info');
-  }catch(e){showToast('Load failed: '+e.message,'error');}
+  }catch(e){
+    // Restore KPIs on error
+    rptKpis.forEach(id=>{const el=document.getElementById(id);if(el&&el.querySelector('.shimmer-block')){el.textContent=el.dataset._orig||'—';}});
+    showToast('Load failed: '+e.message,'error');
+  }
   if(lb)lb.disabled=false;if(lt)lt.style.display='inline';if(ls)ls.style.display='none';
 }
 
@@ -2132,10 +2617,7 @@ function clearHistoryFilters(){
 
 // ── RECENT INPUTS ────────────────────────────────────────────
 function initRecentInputs(){
-  const now=new Date();const pad=n=>String(n).padStart(2,'0');const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
-  document.getElementById('ri-from').value=fmt(weekAgo);document.getElementById('ri-to').value=fmt(now);
-  setRiPreset('24h');
+  setRiPreset('today');
 }
 
 function setRiPreset(preset){
@@ -2152,9 +2634,9 @@ async function loadRecentInputs(){
   if(!from||!to){ showToast('Select a date range','error'); return; }
   const spinner = document.getElementById('riSpinnerWrap'); const tbody = document.getElementById('riTbody');
   spinner.style.display = 'inline-block';
-  tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted)"><span class="spinner"></span> Loading…</td></tr>';
-  // Reset filters on each load
-  clearRiFilters();
+  // Reset filter dropdowns only — do NOT call clearRiFilters() which would overwrite shimmer
+  ['ri-f-brand','ri-f-size','ri-f-thick','ri-f-lot'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  tbody.innerHTML = '<tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr>';
   try{
     const data = await api('getSummary',{from,to});
     riRowsCache = (data.inputs||[]).slice().reverse();
@@ -2476,25 +2958,13 @@ const MASTER_COLUMNS=[
 
 let masterColData=null;
 
-async function loadMasterData(){
-  const btn=document.getElementById('masterRefreshBtn');
-  if(btn){btn.disabled=true;document.getElementById('masterRefreshTxt').textContent='↻ Loading…';}
-  try{
-    const data=await api('getMasterColumnInfo');
-    masterColData=data;renderMasterKpis(data);renderMasterSections(data);renderPermissionSwitches();
-  }catch(e){showToast('Master data load failed: '+e.message,'error');}
-  if(btn){btn.disabled=false;document.getElementById('masterRefreshTxt').textContent='⟳ Refresh';}
-}
+// Sync version called after data is already fetched
+function renderPermissionSwitchesSync(perms){
+  // Only render if current user is Admin
+  if((currentUser||'').toLowerCase() !== 'admin') return;
 
-
-async function renderPermissionSwitches(){
-  // Only show if master password was used
-  if(!document.getElementById('tab-master')||document.getElementById('tab-master').style.display==='none') return;
-  
-  let perms;
-  try{ perms = await api('getEditPermissions'); editPermissions = perms; }
-  catch(e){ return; }
-  
+  if(!perms) return;
+  editPermissions = perms;
   const containerId = 'permSwitchesPanel';
   let existing = document.getElementById(containerId);
   if(!existing){
@@ -2502,25 +2972,24 @@ async function renderPermissionSwitches(){
     existing.id = containerId;
     existing.className = 'card';
     existing.style.marginBottom = '20px';
-    // Insert at top of master sections
     const masterSections = document.getElementById('masterSections');
     masterSections.insertBefore(existing, masterSections.firstChild);
   }
-  
+
   const switches = [
-    { key:'enableInputEdit',    label:'Enable input edit',    col:'R2' },
-    { key:'enableInputDelete',  label:'Enable input delete',  col:'S2' },
-    { key:'enableOutputEdit',   label:'Enable Output edit',   col:'T2' },
-    { key:'enableOutputDelete', label:'Enable Output delete', col:'U2' }
+    { key:'enableInputEdit',    label:'Enable input edit',    col:'T2' },
+    { key:'enableInputDelete',  label:'Enable input delete',  col:'U2' },
+    { key:'enableOutputEdit',   label:'Enable Output edit',   col:'V2' },
+    { key:'enableOutputDelete', label:'Enable Output delete', col:'W2' }
   ];
-  
+
   existing.innerHTML = `
     <div class="card-header" style="border-left:4px solid #7c3aed">
       <div class="card-title" style="color:#7c3aed;text-transform:none;font-size:14px;letter-spacing:0">
         🔒 Edit &amp; Delete Permissions
         <span class="badge" style="background:#7c3aed;color:#fff;margin-left:8px;font-size:10px">4 CONTROLS</span>
       </div>
-      <span style="font-size:11px;color:var(--muted)">Controls R2–U2 in MasterData sheet · Master password required to change</span>
+      <span style="font-size:11px;color:var(--muted)">Controls T2–W2 in MasterData sheet · Admin only</span>
     </div>
     <div style="padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
       ${switches.map(s=>`
@@ -2529,11 +2998,11 @@ async function renderPermissionSwitches(){
           <div style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace">Sheet cell: ${s.col}</div>
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
             <div style="position:relative;width:44px;height:24px;flex-shrink:0">
-              <input type="checkbox" id="perm-${s.key}" ${perms[s.key]?'checked':''} onchange="savePermSwitch()"
+              <input type="checkbox" id="perm-${s.key}" ${perms[s.key]?'checked':''}
                 style="position:absolute;opacity:0;width:0;height:0">
-              <div id="perm-track-${s.key}" onclick="document.getElementById('perm-${s.key}').click()"
-                style="position:absolute;inset:0;border-radius:99px;background:${perms[s.key]?'var(--green)':'#d1d5db'};cursor:pointer;transition:background .2s">
-                <div style="position:absolute;top:3px;left:${perms[s.key]?'23px':'3px'};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s" id="perm-knob-${s.key}"></div>
+              <div id="perm-track-${s.key}"
+                style="position:absolute;inset:0;border-radius:99px;background:${perms[s.key]?'var(--green)':'#d1d5db'};cursor:pointer;transition:background .2s;pointer-events:none">
+                <div style="position:absolute;top:3px;left:${perms[s.key]?'23px':'3px'};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;pointer-events:none" id="perm-knob-${s.key}"></div>
               </div>
             </div>
             <span id="perm-label-${s.key}" style="font-size:13px;font-weight:600;color:${perms[s.key]?'var(--green)':'var(--muted)'}">${perms[s.key]?'Yes — Enabled':'No — Disabled'}</span>
@@ -2541,7 +3010,7 @@ async function renderPermissionSwitches(){
         </div>`).join('')}
     </div>
     <div id="permSaveStatus" style="padding:0 20px 12px;font-size:12px;color:var(--muted)"></div>`;
-  
+
   // Wire up live visual update for each toggle
   switches.forEach(s=>{
     const cb = document.getElementById('perm-'+s.key);
@@ -2554,8 +3023,164 @@ async function renderPermissionSwitches(){
       if(lbl){ lbl.textContent = on?'Yes — Enabled':'No — Disabled'; lbl.style.color = on?'var(--green)':'var(--muted)'; }
       const card = cb.closest('div[style*="border:1.5px"]');
       if(card) card.style.borderColor = on?'var(--green)':'var(--border)';
+      savePermSwitch(); // save to sheet on every toggle
     });
   });
+
+  // (password panel rendered separately by loadMasterDataFull)
+}
+
+// ── PASSWORD MANAGEMENT PANEL (Admin only, in Master tab) ─────
+function renderPasswordManagementPanelSync(configData){
+  if((currentUser||'').toLowerCase() !== 'admin') return;
+
+  const panelId = 'pwMgmtPanel';
+  let panel = document.getElementById(panelId);
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = panelId;
+    panel.className = 'card';
+    panel.style.marginBottom = '20px';
+    const permPanel = document.getElementById('permSwitchesPanel');
+    if(permPanel && permPanel.parentNode){
+      permPanel.parentNode.insertBefore(panel, permPanel.nextSibling);
+    } else {
+      document.getElementById('masterSections')?.appendChild(panel);
+    }
+  }
+
+  // Use already-fetched data
+  const users = (configData && configData.users) || [];
+  const enablePw = (configData && configData.enablePasswordForUsers) || false;
+  loginConfig.enablePasswordForUsers = enablePw;
+
+  const userRows = users.map(u=>`
+    <tr style="border-bottom:1px solid var(--border2)">
+      <td style="padding:8px 12px;font-size:13px;font-weight:600">${u}</td>
+      <td style="padding:8px 12px">
+        <input type="password" id="pw-field-${u.replace(/[^a-zA-Z0-9]/g,'_')}"
+          placeholder="New password…"
+          style="width:140px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text)">
+      </td>
+      <td style="padding:8px 12px">
+        <button onclick="saveUserPassword('${u.replace(/'/g,"\\'")}','pw-field-${u.replace(/[^a-zA-Z0-9]/g,'_')}')"
+          style="padding:6px 14px;background:#1c1917;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">
+          Save
+        </button>
+      </td>
+    </tr>`).join('');
+
+  panel.innerHTML = `
+    <div class="card-header" style="border-left:4px solid #0369a1">
+      <div class="card-title" style="color:#0369a1;text-transform:none;font-size:14px;letter-spacing:0">
+        🔑 Password Management
+        <span class="badge" style="background:#0369a1;color:#fff;margin-left:8px;font-size:10px">ADMIN ONLY</span>
+      </div>
+      <span style="font-size:11px;color:var(--muted)">Set passwords per user (col R) · Toggle login requirement (col S)</span>
+    </div>
+    <div style="padding:16px 20px">
+      <!-- Enable password toggle -->
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--bg);border:1.5px solid ${enablePw?'var(--amber)':'var(--border)'};border-radius:var(--r-md);margin-bottom:18px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Require password for non-Admin users</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">When ON — all users must enter their col R password at login (S2 = Yes)</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <div style="position:relative;width:44px;height:24px;flex-shrink:0">
+            <input type="checkbox" id="enablePwToggle" ${enablePw?'checked':''} onchange="toggleEnablePassword()"
+              style="position:absolute;opacity:0;width:0;height:0">
+            <div id="enablePwTrack"
+              style="position:absolute;inset:0;border-radius:99px;background:${enablePw?'var(--amber)':'#d1d5db'};cursor:pointer;transition:background .2s;pointer-events:none">
+              <div id="enablePwKnob" style="position:absolute;top:3px;left:${enablePw?'23px':'3px'};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;pointer-events:none"></div>
+            </div>
+          </div>
+          <span id="enablePwLabel" style="font-size:13px;font-weight:600;color:${enablePw?'var(--amber)':'var(--muted)'}">${enablePw?'On':'Off'}</span>
+        </label>
+      </div>
+
+      <!-- Per-user password table -->
+      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Per-User Passwords (col R)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--bg);border-bottom:2px solid var(--border)">
+          <th style="padding:7px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text2)">User</th>
+          <th style="padding:7px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text2)">New Password</th>
+          <th style="padding:7px 12px;font-size:11px;font-weight:600;color:var(--text2)"></th>
+        </tr></thead>
+        <tbody>${userRows}</tbody>
+      </table>
+      <div id="pwMgmtStatus" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+    </div>`;
+}
+
+async function saveUserPassword(targetUser, fieldId){
+  const field = document.getElementById(fieldId);
+  const newPw = field ? field.value.trim() : '';
+  const status = document.getElementById('pwMgmtStatus');
+
+  if(!newPw){
+    if(status){ status.textContent = '❌ Password cannot be empty.'; status.style.color='var(--red)'; }
+    showToast('❌ Password cannot be empty.','error');
+    if(field) field.focus();
+    return;
+  }
+
+  if(status){ status.textContent = 'Saving…'; status.style.color='var(--muted)'; }
+  try{
+    const r = await api('setUserPassword',{
+      adminPassword: '__SKIP__',
+      adminUser:     currentUser,
+      targetUser:    targetUser,
+      newPassword:   newPw
+    });
+    if(r && r.error) throw new Error(r.error);
+    if(field) field.value = '';
+    if(status){ status.textContent = '✓ Password updated for "'+targetUser+'" at '+new Date().toLocaleTimeString(); status.style.color='var(--green)'; }
+    showToast('✓ Password updated for '+targetUser,'success');
+  }catch(e){
+    const msg = e.message === 'WRONG_PASSWORD' ? '❌ Wrong password — try again.'
+              : e.message === 'USER_NOT_FOUND'  ? '❌ User "'+targetUser+'" not found in MasterData.'
+              : '❌ ' + (e.message || 'Save failed');
+    if(status){ status.textContent = msg; status.style.color='var(--red)'; }
+    showToast(msg,'error');
+  }
+}
+
+async function toggleEnablePassword(){
+  const cb    = document.getElementById('enablePwToggle');
+  const track = document.getElementById('enablePwTrack');
+  const knob  = document.getElementById('enablePwKnob');
+  const lbl   = document.getElementById('enablePwLabel');
+  const on    = cb.checked;
+
+  // Visual update
+  if(track) track.style.background = on?'var(--amber)':'#d1d5db';
+  if(knob)  knob.style.left        = on?'23px':'3px';
+  if(lbl){  lbl.textContent = on?'On':'Off'; lbl.style.color = on?'var(--amber)':'var(--muted)'; }
+
+  try{
+    await api('setEnablePassword',{
+      adminPassword: '__SKIP__',
+      adminUser:     currentUser,
+      enable:        on
+    });
+    // Success
+    loginConfig.enablePasswordForUsers = on;
+    showToast('✓ Login password requirement '+(on?'enabled':'disabled'),'success');
+    const card = cb.closest ? cb.closest('div[style*="border:1.5px"]') : null;
+    if(card) card.style.borderColor = on?'var(--amber)':'var(--border)';
+  }catch(e){
+    const raw = e.message || '';
+    const msg = raw === 'WRONG_ADMIN_PASSWORD' ? '❌ Wrong Admin password.'
+              : raw === 'WRONG_PASSWORD'        ? '❌ Wrong password — try again.'
+              : raw === 'ACCESS_DENIED'         ? '🚫 Access denied.'
+              : '❌ ' + raw;
+    showToast(msg,'error');
+    // Revert toggle to previous state
+    cb.checked = !on;
+    if(track) track.style.background = !on?'var(--amber)':'#d1d5db';
+    if(knob)  knob.style.left        = !on?'23px':'3px';
+    if(lbl){  lbl.textContent = !on?'On':'Off'; lbl.style.color = !on?'var(--amber)':'var(--muted)'; }
+  }
 }
 
 async function savePermSwitch(){
@@ -2574,8 +3199,12 @@ async function savePermSwitch(){
     showToast('✓ Permissions updated in MasterData sheet','success');
     if(statusEl) statusEl.textContent = '✓ Saved at '+new Date().toLocaleTimeString();
   }catch(e){
-    showToast('Failed to save permissions: '+e.message,'error');
-    if(statusEl) statusEl.textContent = '✕ Save failed: '+e.message;
+    const raw = e.message || '';
+    const msg = raw === 'WRONG_PASSWORD' ? '❌ Wrong password — try again.'
+              : raw === 'ACCESS_DENIED'  ? '🚫 Only Admin can change permissions.'
+              : '❌ Failed to save: ' + raw;
+    showToast(msg,'error');
+    if(statusEl) statusEl.textContent = msg;
   }
 }
 
@@ -2826,7 +3455,7 @@ async function saveMasterAdd(colKey){
     closeMasterAddPanel(colKey);
     colDef.fields.forEach(f=>{const el=document.getElementById('madd-'+colKey+'-'+f.key);if(el)el.value='';});
     await loadMasterData();
-    if(colKey==='USER')await loadUsers();
+    if(colKey==='USER'){_usersCache=null;await loadUsers();}
   }catch(e){showToast('Save failed: '+e.message,'error');}
 }
 
@@ -2861,7 +3490,7 @@ async function doUpdateMasterCell(col,row,newVal){
     await api('updateCellEntry',{col,row:Number(row),value:newVal,user:currentUser});
     showToast('✓ '+col+' updated','success');
     await loadMasterData();
-    if(col==='USER')await loadUsers();
+    if(col==='USER'){_usersCache=null;await loadUsers();}
   }catch(e){showToast('Update failed: '+e.message,'error');}
 }
 
@@ -2905,7 +3534,7 @@ async function deleteMasterCell(col,row,currentVal){
   try{
     await api('deleteCellEntry',{col,row:Number(row),user:currentUser});
     showToast('✓ '+col+' entry cleared','success');
-    if(col==='USER')await loadUsers();
+    if(col==='USER'){_usersCache=null;await loadUsers();}
     await loadMasterData();
   }catch(e){showToast('Delete failed: '+e.message,'error');}
 }
@@ -2956,10 +3585,7 @@ async function confirmDeleteOutput(r){
 
 // ── RECENT OUTPUTS (Move Outs) ────────────────────────────────
 function initRecentOutputs(){
-  const now=new Date();const pad=n=>String(n).padStart(2,'0');const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
-  document.getElementById('ro-from').value=fmt(weekAgo);document.getElementById('ro-to').value=fmt(now);
-  setRoPreset('24h');
+  setRoPreset('today');
 }
 
 function setRoPreset(preset){
@@ -2976,9 +3602,9 @@ async function loadRecentOutputs(){
   if(!from||!to){ showToast('Select a date range','error'); return; }
   const spinner = document.getElementById('roSpinnerWrap'); const tbody = document.getElementById('roTbody');
   if(spinner) spinner.style.display = 'inline-block';
-  tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted)"><span class="spinner"></span> Loading…</td></tr>';
-  // Reset filters on each load
-  clearRoFilters();
+  // Reset filter dropdowns only — do NOT call clearRoFilters() which would overwrite shimmer
+  ['ro-f-brand','ro-f-size','ro-f-thick','ro-f-lot'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  tbody.innerHTML = '<tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell narrow"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell tiny"></div></td><td><div class="shimmer-cell tiny"></div></td></tr>';
   try{
     const data = await api('getSummary',{from,to});
     roRowsCache = (data.outputs||[]).slice().reverse();
@@ -3047,7 +3673,7 @@ async function saveEditedOutputPcs(){
 async function loadInputEditLogs(){
   const spinner=document.getElementById('ielSpinnerWrap');const tbody=document.getElementById('ielTbody');
   if(spinner)spinner.style.display='inline-block';
-  tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)"><span class="spinner"></span> Loading…</td></tr>';
+  tbody.innerHTML='<tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr>';
   try{
     const data=await api('getInputEditLogs');
     const rows=(data.rows||[]).slice().reverse();
@@ -3065,7 +3691,7 @@ async function loadInputEditLogs(){
 async function loadOutputEditLogs(){
   const spinner=document.getElementById('oelSpinnerWrap');const tbody=document.getElementById('oelTbody');
   if(spinner)spinner.style.display='inline-block';
-  tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)"><span class="spinner"></span> Loading…</td></tr>';
+  tbody.innerHTML='<tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr><tr class="shimmer-row"><td><div class="shimmer-cell wide"></div></td><td><div class="shimmer-cell med"></div></td><td><div class="shimmer-cell narrow"></div></td></tr>';
   try{
     const data=await api('getOutputEditLogs');
     const rows=(data.rows||[]).slice().reverse();
